@@ -1,1 +1,5 @@
 PluginManager.py
+*.pyc
+*~
+*.swp
+*.swo
