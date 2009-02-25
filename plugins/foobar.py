@@ -1,7 +1,7 @@
-import plugin
+from plugin_base import PluginBase
 
-class Plugin(plugin.Plugin):
+class Plugin(PluginBase):
 	def __init__(self):
-		plugin.Plugin.__init__(self)
+		PluginBase.__init__(self)
 		pass
 

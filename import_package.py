@@ -27,24 +27,24 @@ class PluginHandler:
         You shouldn't need this, but you can use it for performance tweak.
 
         '''
-        if self.instance:
-            return self.instance
+        if self._instance:
+            return self._instance
         try:
-            self.instance = self.module.Plugin()
+            self._instance = self.module.Plugin()
         except:
-            self.instance = None
+            self._instance = None
 
-        return self.instance
+        return self._instance
 
     def start(self):
         '''Instanciate (if necessary) and starts the plugin.
         @return False if something goes wrong, else True.
         '''
         self.instanciate()
-        if not self.instance:
+        if not self._instance:
             return False
         try:
-            self.instance.start()
+            self._instance.start()
         except:
             print "errore nello start di", self.name
             return False
@@ -53,7 +53,7 @@ class PluginHandler:
     def stop(self):
         '''Stop the plugin, of course'''
         if self.active:
-            self.instance.stop()
+            self._instance.stop()
 
     def is_active(self):
         '''@return True if an instance exist and is started. False otherwise'''
@@ -68,7 +68,7 @@ class PackageHandler:
     def __init__(self, directory):
         '''@param directory The directory containing the package'''
         self.name = directory
-        self.instance = False #we are not instancing it
+        self._instance = False #we are not instancing it
         self._do_import()
 
     def _do_import(self):
@@ -88,14 +88,14 @@ class PackageHandler:
         '''Instanciate (if not already done). 
         You shouldn't need this, but you can use it for performance tweak.
         '''
-        if self.instance:
-            return self.instance
+        if self._instance:
+            return self._instance
         try:
-            self.instance = self.module.plugin.Plugin()
+            self._instance = self.module.plugin.Plugin()
         except:
-            self.instance = None
+            self._instance = None
 
-        return self.instance
+        return self._instance
 
     def start(self):
         '''Instanciate (if necessary) and starts the plugin.
@@ -113,13 +113,13 @@ class PackageHandler:
             
     def stop(self):
         if self.active:
-            self.instance.stop()
+            self._instance.stop()
 
     def is_active(self):
         '''@return True if an instance exist and is started. False otherwise'''
-        if not self.instance:
+        if not self._instance:
             return False
-        return self.instance.is_active()
+        return self._instance.is_active()
 
 
 for root, d, f in os.walk('plugins'):

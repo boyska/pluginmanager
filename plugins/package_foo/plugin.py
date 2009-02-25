@@ -1,6 +1,5 @@
-print 'Foo.py is parsed'
+from plugin_base import PluginBase
 
-class Foo:
-    print 'foo is parsed'
+class Foo(PluginBase):
     def __init__(self):
-        print 'foo is running!'
+        PluginBase.__init__(self)
