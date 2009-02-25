@@ -68,6 +68,40 @@ class PluginHandler:
             return False
         return self._instance.is_active()
 
+
+class PackageResource:
+    def __init__(self, base_dir, directory):
+        self.path = directory #'''Path to the package'''
+        self.base_path = base_dir
+        self._resources = [] #Ope ned resources
+
+    def _get_resource_path(self, relative_path):
+        '''get the path to the required resource.
+        @return the path if it exists or an empty string otherwise'''
+        abs_path = os.path.join(self.base_path, self.path, relative_path)
+        print abs_path
+        if os.path.exists(abs_path):
+            return abs_path
+        return ''
+
+    def get_resource(self, relative_path):
+        '''Opens a file.
+        @param relative_path A path starting from the package dir
+        @return a file object opening relative_path if it is possible, or None.
+        '''
+        file_path = self._get_resource_path(relative_path)
+        print file_path
+        if not file_path:
+            return None
+        try:
+            f = open(file_path)
+        except IOError:
+            return None
+        else:
+            self._resources.append(f)
+            return f
+
+
 class PackageHandler:
     '''Abstraction over a plugin.
     
@@ -75,10 +109,11 @@ class PackageHandler:
     It will provide the plugin several utilities to work on the package
 
     '''
-    def __init__(self, directory):
+    def __init__(self, base_dir, directory):
         '''@param directory The directory containing the package'''
         self.name = directory
         self.directory = directory
+        self.base_dir = base_dir
         self._instance = None #we are not instancing it
 
         self.module = None
@@ -88,7 +123,7 @@ class PackageHandler:
         '''Does the dirty stuff with __import__'''
         old_syspath = sys.path
         try:
-            sys.path = ['.', 'plugins']
+            sys.path = ['.', self.base_dir]
             self.module = __import__(self.directory, globals(), None, ['plugin'])
             self.module = self.module.plugin
         except Exception, reason:
@@ -102,13 +137,14 @@ class PackageHandler:
         '''Instanciate (if not already done). 
         You shouldn't need this, but you can use it for performance tweak.
         '''
-        if self._instance:
+        if self._instance is not None:
             return self._instance
         try:
-            self._instance = self.module.plugin.Plugin()
+            self._instance = self.module.Plugin()
         except Exception:
             self._instance = None
-
+        else:
+            self._instance.resource = PackageResource(self.base_dir, self.directory)
         return self._instance
 
     def start(self):
@@ -153,7 +189,7 @@ class PluginManager:
         print dirs
         for directory in [x for x in dirs if not x.startswith('.')]:
             try:
-                mod = PackageHandler(directory)
+                mod = PackageHandler(dir_, directory)
                 self._plugins[mod.name] = mod
             except Exception, reason:
                 print 'Exception while importing %s:\n%s' % (directory, reason)
