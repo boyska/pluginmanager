@@ -79,18 +79,17 @@ class PackageResource:
         '''get the path to the required resource.
         @return the path if it exists or an empty string otherwise'''
         abs_path = os.path.join(self.base_path, self.path, relative_path)
-        print abs_path
         if os.path.exists(abs_path):
             return abs_path
         return ''
 
+    #TODO: context manager
     def get_resource(self, relative_path):
         '''Opens a file.
         @param relative_path A path starting from the package dir
         @return a file object opening relative_path if it is possible, or None.
         '''
         file_path = self._get_resource_path(relative_path)
-        print file_path
         if not file_path:
             return None
         try:
@@ -100,7 +99,26 @@ class PackageResource:
         else:
             self._resources.append(f)
             return f
+    
+    def close_resource(self, resource):
+        '''Close a file.
+        @param resource A resource returned by get_resource
+        @return 
+        '''
+        try:
+            self._resources.remove(resource)
+            resource.close()
+        except IOError:
+            return False
 
+        return True
+
+    def close(self):
+        '''everything. to be called when the plugin is stopped'''
+        for resource in self._resources:
+            self._resources.remove(resource) #TODO: check if this is buggy
+            resource.close()
+            
 
 class PackageHandler:
     '''Abstraction over a plugin.
@@ -165,12 +183,14 @@ class PackageHandler:
         '''If active, stop the plugin'''
         if self.is_active():
             self._instance.stop()
+            self._instance.resource.close()
 
     def is_active(self):
         '''@return True if an instance exist and is started. False otherwise'''
         if not self._instance:
             return False
         return self._instance.is_active()
+
 
 class PluginManager:
     '''Scan directories and manage plugins loading/unloading/control'''
@@ -185,8 +205,6 @@ class PluginManager:
             files = files
             break #sooo ugly
         
-        print files
-        print dirs
         for directory in [x for x in dirs if not x.startswith('.')]:
             try:
                 mod = PackageHandler(dir_, directory)
