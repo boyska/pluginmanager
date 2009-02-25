@@ -1,12 +1,19 @@
+'''Handles plugin importing'''
 import os
 import sys
 
 
 class PluginHandler:
+    '''Abstraction over a plugin.
+    
+    Given a filename, will import it and allows to control it.
+
+    '''
     def __init__(self, filename):
+        '''constructor'''
         self.name = filename.split('.')[0] #TODO basename
         self.module = None
-        self._instance = False
+        self._instance = None
         self._do_import()
 
     def _do_import(self):
@@ -15,9 +22,9 @@ class PluginHandler:
         try:
             sys.path = [os.curdir, 'plugins']
             self.module = __import__(self.name, globals(), locals(), ['plugin'])
-        except ImportError, e:
+        except ImportError, reason:
             print 'error loading', self.name
-            print '-->', e
+            print '-->', reason
         finally:
             sys.path = old_syspath
 
@@ -31,7 +38,7 @@ class PluginHandler:
             return self._instance
         try:
             self._instance = self.module.Plugin()
-        except:
+        except Exception:
             self._instance = None
 
         return self._instance
@@ -45,14 +52,14 @@ class PluginHandler:
             return False
         try:
             self._instance.start()
-        except:
+        except Exception:
             print "errore nello start di", self.name
             return False
         return True
             
     def stop(self):
         '''Stop the plugin, of course'''
-        if self.active:
+        if self._instance and self.is_active():
             self._instance.stop()
 
     def is_active(self):
@@ -62,13 +69,19 @@ class PluginHandler:
         return self._instance.is_active()
 
 class PackageHandler:
-    '''Abstraction over a package.
-    Will be useful to work in the same way with plugins and packages.
+    '''Abstraction over a plugin.
+    
+    Given a directory, will import the plugin.py file inside it and allows to control it.
+    It will provide the plugin several utilities to work on the package
+
     '''
     def __init__(self, directory):
         '''@param directory The directory containing the package'''
         self.name = directory
-        self._instance = False #we are not instancing it
+        self.directory = directory
+        self._instance = None #we are not instancing it
+
+        self.module = None
         self._do_import()
 
     def _do_import(self):
@@ -76,10 +89,11 @@ class PackageHandler:
         old_syspath = sys.path
         try:
             sys.path = ['.', 'plugins']
-            self.module = __import__(directory, globals(), None, ['plugin']).plugin
-        except Exception, e:
+            self.module = __import__(self.directory, globals(), None, ['plugin'])
+            self.module = self.module.plugin
+        except Exception, reason:
             print 'error when importing package', self.name
-            print e
+            print reason
             self.module = None
         finally:
             sys.path = old_syspath
@@ -92,7 +106,7 @@ class PackageHandler:
             return self._instance
         try:
             self._instance = self.module.plugin.Plugin()
-        except:
+        except Exception:
             self._instance = None
 
         return self._instance
@@ -106,13 +120,14 @@ class PackageHandler:
             return False
         try:
             inst.start()
-        except:
+        except Exception:
             print "errore nello start di", self.name
             return False
         return True
             
     def stop(self):
-        if self.active:
+        '''If active, stop the plugin'''
+        if self.is_active():
             self._instance.stop()
 
     def is_active(self):
@@ -121,35 +136,62 @@ class PackageHandler:
             return False
         return self._instance.is_active()
 
+class PluginManager:
+    '''Scan directories and manage plugins loading/unloading/control'''
+    def __init__(self):
+        self._plugins = {} #'name': Plugin/Package
+    
+    def scan_directory(self, dir_):
+        '''Find plugins and packages inside dir_'''
+        dirs = files = []
+        for root, directories, files in os.walk(dir_):
+            dirs = directories
+            files = files
+            break #sooo ugly
+        
+        print files
+        print dirs
+        for directory in [x for x in dirs if not x.startswith('.')]:
+            try:
+                mod = PackageHandler(directory)
+                self._plugins[mod.name] = mod
+            except Exception, reason:
+                print 'Exception while importing %s:\n%s' % (directory, reason)
+        
+        for filename in [x for x in files if x.endswith('.py')]:
+            try:
+                mod = PluginHandler(filename)
+                self._plugins[mod.name] = mod
+            except Exception, reason:
+                print 'Exception while importing %s:\n%s' % (filename, reason)
+    
+    def plugin_start(self, name):
+        '''Starts a plugin.
+        @param name The name of the plugin. See plugin_base.PluginBase.name.
+        '''
+        if not name in self._plugins:
+            return False
+        self._plugins[name].start()
+        return True
+    
+    def plugin_stop(self, name):
+        '''Stops a plugin.
+        @param name The name of the plugin. See plugin_base.PluginBase.name.
+        '''
+        if not name in self._plugins:
+            return False
+        self._plugins[name].stop()
+        return True
 
-for root, d, f in os.walk('plugins'):
-    dirs = d
-    files = f
-    break #SOOOO UGLY!
-
-plugins = {}
-
-
-for directory in [x for x in dirs if not x.startswith('.')]:
-    try:
-        mod = PackageHandler(directory)
-        plugins[directory] = mod
-    except Exception, e:
-        print 'Exception while importing %s:\n%s' % (directory, e)
-
-for file in [x for x in files if x.endswith('.py')]:
-    try:
-        mod = PluginHandler(file)
-        plugins[directory] = mod
-    except Exception, e:
-        print 'Exception while importing %s:\n%s' % (directory, e)
-
-
-for package in plugins.values():
-    print package.name, package.is_active()
-
-for package in plugins.values():
-    print package.name, package.is_active(), '-->',
-    package.start()
-    print package.is_active(), package.module
-
+    def plugin_is_active(self, name):
+        '''Check if a plugin is active.
+        @param name The name of the plugin. See plugin_base.PluginBase.name.
+        @return True if loaded and active, else False.
+        '''
+        if not name in self._plugins:
+            return False
+        self._plugins[name].is_active()
+        return True
+    
+    def get_plugins(self):
+        return self._plugins.keys()
