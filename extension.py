@@ -3,11 +3,11 @@ _classes = {} #'ComponentName': <class 'Component'>
 _instances = {} #'ComponentName': <Component object>
 
 def category_register(category):
-	'''Add a category to the registry; if it already exists, raise a warning.
-	TODO: check if Warning really exists ;).
+	'''Add a category to the registry;
+	TODO: find a way to "raise a warning".
 	'''
-	if category in _registry:
-		raise ValueWarning #does it really exist? I hope :)
+	if not category in _registry:
+		print "Warning: %s doesn't exist" % (category)
 	_registry[category] = []
 
 def register(category, cls):

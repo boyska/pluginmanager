@@ -3,6 +3,9 @@ import os
 import sys
 
 
+from contextlib import contextmanager
+
+
 class PluginHandler:
     '''Abstraction over a plugin.
     
@@ -75,21 +78,31 @@ class PackageResource:
         self.base_path = base_dir
         self._resources = [] #Ope ned resources
 
-    def _get_resource_path(self, relative_path):
+    def get_resource_path(self, relative_path):
         '''get the path to the required resource.
+        If you can, use get_resource.
         @return the path if it exists or an empty string otherwise'''
         abs_path = os.path.join(self.base_path, self.path, relative_path)
         if os.path.exists(abs_path):
             return abs_path
         return ''
 
-    #TODO: context manager
+    def use_resource(self, relative_path):
+        '''A ContextManager that opens a file.
+        If you can use it, you're reccomended to.
+        See self.get_resource for more info.
+        '''
+        f = get_resource(relative_path)
+        yield f
+        self.close_resource(relative_path)
+        
+    
     def get_resource(self, relative_path):
         '''Opens a file.
         @param relative_path A path starting from the package dir
-        @return a file object opening relative_path if it is possible, or None.
+        @return a file object opening relative_path if it is possible, or None
         '''
-        file_path = self._get_resource_path(relative_path)
+        file_path = self.get_resource_path(relative_path)
         if not file_path:
             return None
         try:
