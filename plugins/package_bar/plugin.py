@@ -7,6 +7,7 @@ class Plugin(PluginBase):
         PluginBase.__init__(self)
 
     def start(self):
+        self.extensions_register()
         try:
             f = self.resource.get_resource('xyz')
         except Exception, reason:
@@ -18,5 +19,7 @@ class Plugin(PluginBase):
         except Exception, reason:
             print 'error in reading', reason
 
+
     def extensions_register(self):
-        extension.register('bar_category', bar.Bar)
+        extension.register('bar', bar.Bar)
+        extension.category_register('foo')
