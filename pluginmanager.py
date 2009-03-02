@@ -55,8 +55,8 @@ class PluginHandler:
             return False
         try:
             self._instance.start()
-        except Exception:
-            print "errore nello start di", self.name
+        except Exception, reason:
+            print "errore nello start di", self.name, reason
             return False
         return True
             
@@ -187,8 +187,8 @@ class PackageHandler:
             return False
         try:
             inst.start()
-        except Exception:
-            print "errore nello start di", self.name
+        except Exception, reason:
+            print "errore nello start di", self.name, reason
             return False
         return True
             

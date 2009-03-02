@@ -19,5 +19,7 @@ class Plugin(PluginBase):
         except Exception, reason:
             print 'error in reading', reason
 
+
     def extensions_register(self):
         extension.register('bar', bar.Bar)
+        extension.category_register('foo')
