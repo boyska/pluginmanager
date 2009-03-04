@@ -93,12 +93,12 @@ class PackageResource:
         See self.get_resource for more info.
         '''
         f = get_resource(relative_path)
-		if not f:
-			return
-		try:
-			yield f
-		finally:
-			self.close_resource(relative_path)
+        if not f:
+            return
+        try:
+            yield f
+        finally:
+            self.close_resource(relative_path)
         
     
     def get_resource(self, relative_path):

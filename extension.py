@@ -29,7 +29,7 @@ def get_extensions(category):
     '''return a list of ready-to-use extension instances'''
     return [_instance_of(class_name) for class_name in _registry[category]]
 
-def get_default(category)::
+def get_default(category):
 	'''return ONE extension instance. It will be chosen with preferences'''
 	#put here your choosing logic (preferences)
 	available = get_extensions(category)
