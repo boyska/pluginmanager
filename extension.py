@@ -30,12 +30,23 @@ def get_extensions(category):
     return [_instance_of(class_name) for class_name in _registry[category]]
 
 def get_default(category):
-	'''return ONE extension instance. It will be chosen with preferences'''
-	#put here your choosing logic (preferences)
-	available = get_extensions(category)
-	if available:
-		return available[0] #that's just a test: you should choose better
-	return None
+    '''return ONE extension instance. It will be chosen with preferences'''
+    #put here your choosing logic (preferences)
+    available = get_extensions(category)
+    if available:
+        return available[0] #that's just a test: you should choose better
+    return None
+
+def is_implementation(cls, interface_cls):
+    '''Check if cls implements all the methods provided by interface_cls.
+    Note: every cls implements None.
+    '''
+    for method in [attribute for attribute in dir(interface_cls)
+            if not attribute.startswith('_')]:
+        if not hasattr(cls, method):
+            return False
+    return True
+
 
 def _instance_of(class_name):
     '''Given a class name, will return a ready-to-use instance. 
