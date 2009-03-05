@@ -190,7 +190,9 @@ class PackageHandler:
         if not inst:
             return False
         try:
+            inst.category_register()
             inst.start()
+            inst.extension_register()
         except Exception, reason:
             print "errore nello start di", self.name, reason
             return False
