@@ -55,8 +55,8 @@ class PluginHandler:
             return False
         try:
             self._instance.start()
-        except Exception:
-            print "errore nello start di", self.name
+        except Exception, reason:
+            print "errore nello start di", self.name, reason
             return False
         return True
             
@@ -93,12 +93,12 @@ class PackageResource:
         See self.get_resource for more info.
         '''
         f = get_resource(relative_path)
-		if not f:
-			return
-		try:
-			yield f
-		finally:
-			self.close_resource(relative_path)
+        if not f:
+            return
+        try:
+            yield f
+        finally:
+            self.close_resource(relative_path)
         
     
     def get_resource(self, relative_path):
@@ -190,11 +190,11 @@ class PackageHandler:
         if not inst:
             return False
         try:
-			inst.category_register()
+            inst.category_register()
             inst.start()
-			inst.extension_register()
-        except Exception:
-            print "errore nello start di", self.name
+            inst.extension_register()
+        except Exception, reason:
+            print "errore nello start di", self.name, reason
             return False
         return True
             
