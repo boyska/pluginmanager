@@ -1,41 +1,62 @@
-_registry = {} #'CategoryName': ['list', 'of', 'components']
-_classes = {} #'ComponentName': <class 'Component'>
-_instances = {} #'ComponentName': <Component object>
+class Category:
+    def __init__(self, name, interface):
+        self.name = name
+        self.interface = interface
+        self.classes = {}
+        self.instances = {}
+    
+    def register(self, cls):
+        class_name = _get_class_name(cls)
+        self.classes[class_name] = cls
 
-def category_register(category):
-    '''Add a category to the registry'''
-    _registry[category] = []
+    def get_extensions(self):
+        '''return a list of ready-to-use extension instances'''
+        return [self._instance_of(class_name) for class_name in self.classes.keys()]
 
-def register(category, cls):
-    '''Register cls as an Extension for category. 
+    def _instance_of(self, class_name):
+        '''Given a class name, will return a ready-to-use instance. 
+        Every "trick" (hey, only if necessary), will be done here.
+        '''
+        if class_name in self.instances:
+            return self.instances[class_name]
+
+        instance = self.classes[class_name]()
+        self.instances[class_name] = instance
+        return instance
+
+    def get_default(self):
+        '''return ONE extension instance. It will be chosen with preferences'''
+        #put here your choosing logic (preferences)
+        available = self.get_extensions()
+        if available:
+            return available[0] #that's just a test: we should choose better
+        return None
+
+
+_categories = {} #'CategoryName': Category('ClassName')
+
+def category_register(category, interface=None):
+    '''Add a category'''
+    _categories[category] = Category(category, interface)
+
+def register(category_name, cls):
+    '''Register cls as an Extension for cate gory. 
     If the category doesn't exist, it creates it(but returns False).
     It doesn't instanciate that class immediately
     @return False if the category didn't exist. Probably you made a mistake, True otherwise.
     '''
-    class_name = _get_class_name(cls)
-    _classes[class_name] = cls
+    get_category(category_name).register(cls)
 
-    try:
-        _registry[category].append(class_name)
-    except KeyError:
-        category_register(category)
-        _registry[category].append(class_name)
-        return False #check this: probably that category doesn't exist (or it's not well-declared)
-    
-    return True
-    #note: we shouldn't immediately instanciate it
+def get_category(category_name):
+    '''Get a Category object'''
+    return _categories[category_name]
 
-def get_extensions(category):
+def get_extensions(category_name):
     '''return a list of ready-to-use extension instances'''
-    return [_instance_of(class_name) for class_name in _registry[category]]
+    return get_category(category_name).get_extensions()
 
-def get_default(category):
-    '''return ONE extension instance. It will be chosen with preferences'''
-    #put here your choosing logic (preferences)
-    available = get_extensions(category)
-    if available:
-        return available[0] #that's just a test: you should choose better
-    return None
+def get_default(category_name):
+    return get_category(category_name).get_default()
 
 def is_implementation(cls, interface_cls):
     '''Check if cls implements all the methods provided by interface_cls.
@@ -46,18 +67,6 @@ def is_implementation(cls, interface_cls):
         if not hasattr(cls, method):
             return False
     return True
-
-
-def _instance_of(class_name):
-    '''Given a class name, will return a ready-to-use instance. 
-    Every "trick" (hey, only if necessary), will be done here.
-    '''
-    if class_name in _instances:
-        return _instances[class_name]
-
-    instance = _classes[class_name]()
-    _instances[class_name] = instance
-    return instance
 
 def _get_class_name(cls):
     '''Returns the full name of a class: module.class
