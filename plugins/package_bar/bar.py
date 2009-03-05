@@ -1,8 +1,17 @@
 import extension
+from interfaces.bar import IBar
+
+class IFoo:
+    '''this can extend bar'''
+    def do_foo(self):
+        '''you must implement it!'''
+        raise NotImplementedError
+
 
 class Bar:
     print 'bar is parsed'
     def __init__(self):
+        assert extension.is_implementation(Bar, IBar)
         print 'bar is running'
     def bar(self):
         print 'bar will bar'

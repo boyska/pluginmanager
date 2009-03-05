@@ -6,6 +6,11 @@ class Category:
         self.instances = {}
     
     def register(self, cls):
+        if self.interface is not None:
+            if not is_implementation(cls, self.interface):
+                raise ValueError,\
+                        "the specified cls doesn't agree to the interface: %s" % \
+                         (str(self.interface))
         class_name = _get_class_name(cls)
         self.classes[class_name] = cls
 
@@ -40,9 +45,10 @@ def category_register(category, interface=None):
     _categories[category] = Category(category, interface)
 
 def register(category_name, cls):
-    '''Register cls as an Extension for cate gory. 
+    '''Register cls as an Extension for category. 
+    If the class doesn't agree to the required interface, raises ValueError.
     If the category doesn't exist, it creates it(but returns False).
-    It doesn't instanciate that class immediately
+    It doesn't instanciate that class immediately.
     @return False if the category didn't exist. Probably you made a mistake, True otherwise.
     '''
     get_category(category_name).register(cls)

@@ -1,10 +1,10 @@
 import pluginmanager
 import extension
+from interfaces.bar import IBar
 
 class DoThings:
     def __init__(self):
-        extension.category_register('foo')
-        extension.category_register('bar')
+        extension.category_register('bar', IBar)
         extension.category_register('xyz')
         extension.category_register('magic')
     

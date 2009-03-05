@@ -22,4 +22,4 @@ class Plugin(PluginBase):
 
     def extensions_register(self):
         extension.register('bar', bar.Bar)
-        extension.category_register('foo')
+        extension.category_register('foo', bar.IFoo)
