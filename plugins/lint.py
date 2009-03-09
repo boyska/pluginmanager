@@ -9,16 +9,15 @@ def lint_plugin(whatever):
 	else:
 		lint_dir(whatever)
 
-
 def lint_file(file):
 	sys.path.append('..')
-	lint.Run(sys.argv[1:])
+	lint.Run(['-f', '--rcfile=standard.rc', '--parseable'] + sys.argv[1:])
 
 
 def lint_dir(dir):
 	sys.path.append('..')
 	sys.argv[1] = os.path.join(sys.argv[1], 'plugin.py')
-	lint.Run(sys.argv[1:])
+	lint.Run(['-f', 'parseable', '--rcfile=plutin.pylint.rc'] + sys.argv[1:])
 
 
 if __name__ == '__main__':
